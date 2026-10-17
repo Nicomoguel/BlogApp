@@ -1,0 +1,18 @@
+services:
+  # Our PostgreSQL database
+  db:
+    # Using the latest PostgreSQL image
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    restart: always # If there's any issues we want docker container to restart
+    environment:
+      POSTGRES_PASSWORD: changemeinprod! # Password for the docker container
+
+  # Data management interface
+  # This is to look at the database visually
+  adminer:
+    image: adminer:latest
+    restart: always
+    ports:
+      - "8888:8080"
