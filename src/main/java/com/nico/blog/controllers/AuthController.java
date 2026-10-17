@@ -1,0 +1,32 @@
+package com.nico.blog.controllers;
+
+import com.nico.blog.domain.dtos.AuthResponse;
+import com.nico.blog.domain.dtos.LoginRequest;
+import com.nico.blog.sevices.AuthenticationService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping(path = "/api/v1")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthenticationService authenticationService;
+
+    @PostMapping
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request){
+        UserDetails userDetails = authenticationService.authenticate(request.getEmail(), request.getPassword());
+        String tokenValue = authenticationService.generateToken(userDetails);
+        AuthResponse authResponse = AuthResponse.builder()
+                .token(tokenValue)
+                .expiresIn(86400)
+                .build();
+        return ResponseEntity.ok(authResponse);
+    }
+
+}
