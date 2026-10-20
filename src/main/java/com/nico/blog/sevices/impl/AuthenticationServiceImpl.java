@@ -2,6 +2,7 @@ package com.nico.blog.sevices.impl;
 
 import com.nico.blog.security.BlogUserDetailsService;
 import com.nico.blog.sevices.AuthenticationService;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -28,7 +29,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final UserDetailsService userDetailsService;
 
-    @Value("&{jwt.secret}")
+    @Value("${jwt.secret}")
     private String secretKey;
 
     private final Long jwtExpiryMs = 86400000L;
@@ -57,11 +58,28 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // we create the awt token, setting the encryption algorithm to get the key
         return Jwts.builder()
                 .setClaims(claims)
+                .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiryMs))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
 
+    }
+
+    @Override
+    public UserDetails validateToken(String token) {
+        String username = extractUsername(token);
+        return userDetailsService.loadUserByUsername(username);
+    }
+
+    private String extractUsername(String token){
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getSubject(); // we put the username into the subject
     }
 
 
